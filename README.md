@@ -16,3 +16,16 @@ The dependencies are showed in Cargo.toml, you can add them with the command "ca
 ## Developers
 This project is being developed by me, but any contributer is welcome!
 Past projects were being developed by me and e0tra. But currently i am the only developer active here.
+
+
+# Running
+To run mOS, you need to use these commands
+
+```
+mkdir mOS
+cd mOS
+rustup target add thumbv7em-none-eabihf
+cargo install bootimage
+cargo build
+cargo run
+```
