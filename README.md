@@ -19,13 +19,17 @@ Past projects were being developed by me and e0tra. But currently i am the only 
 
 
 # Running
-To run mOS, you need to use these commands
+To run mOS, you need to use these commands ( create an issue if some commands are missing )
 
 ```
 mkdir mOS
 cd mOS
 rustup target add thumbv7em-none-eabihf
 cargo install bootimage
+cargo bootimage
 cargo build
 cargo run
 ```
+## Logs
+- Initial Commit : <20.02.2025>
+- Coming soon
