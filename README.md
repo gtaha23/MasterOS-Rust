@@ -19,7 +19,7 @@ Past projects were being developed by me and e0tra. But currently i am the only 
 
 
 # Running
-To run mOS, you need to use these commands ( create an issue if some commands are missing )
+To run mOS in qemu, you need to use these commands ( create an issue if some commands are missing ) last command is for writing the image to a USB
 
 ```
 mkdir mOS
@@ -29,6 +29,7 @@ cargo install bootimage
 cargo bootimage
 cargo build
 cargo run
+dd if=target/x86_64-blog_os/debug/bootimage-blog_os.bin of=/dev/sdX && sync
 ```
 ## Logs
 - Initial Commit : <20.02.2025>
