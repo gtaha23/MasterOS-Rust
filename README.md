@@ -1,5 +1,5 @@
 # MasterOS-Rust
-A lightweight OS written in Rust
+A lightweight OS written in Rust (bootloader is included as a crate)
 
 # History
 This project is currently being developed in 2 ways
