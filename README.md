@@ -29,6 +29,8 @@ cargo install bootimage
 cargo bootimage
 cargo build
 cargo run
+
+# Use for USB
 dd if=target/x86_64-mos/debug/bootimage-rust_app_name.bin of=/dev/usb-name && sync
 ```
 ## Logs
