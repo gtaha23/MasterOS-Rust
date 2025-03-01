@@ -23,8 +23,8 @@ Past projects were being developed by me and e0tra. But currently i am the only 
 To run mOS in qemu, you need to use these commands ( create an issue if some commands are missing ) last command is for writing the image to a USB
 
 ```
-cargo new mOS
-cd mOS
+cargo new mos_rust
+cd mos_rust
 rustup target add thumbv7em-none-eabihf
 cargo install bootimage
 cargo bootimage
