@@ -2,6 +2,7 @@
 A lightweight OS written in Rust (bootloader is included as a crate)
 
 # History
+The lore behind this project is on MasterOS repo (C#)
 This project is currently being developed in 2 ways
 -masterOS-ubuntu (C repo), 
 -MasterOS-Rust (Rust repo)
