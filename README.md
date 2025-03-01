@@ -10,8 +10,9 @@ This project is currently being developed in 2 ways
 The dependencies are showed in Cargo.toml, you can add them with the command "cargo add crate-name@version"
 
 # Updates
-- VGA Text Mode is added
-- Macros for printing added
+- Testing added
+- Integrated Tests added
+- Fixes for vga_buffer.rs and main.rs added
 
 ## Developers
 This project is being developed by me, but any contributer is welcome!
@@ -30,9 +31,14 @@ cargo bootimage
 cargo build
 cargo run
 
+# testing
+cargo test
+
 # Use for USB
 dd if=target/x86_64-mos/debug/bootimage-rust_app_name.bin of=/dev/usb-name && sync
 ```
+
 ## Logs
 - Initial Commit : <20.02.2025>
+- Testing Added & fixes : <01.03.2025>
 - Coming soon
