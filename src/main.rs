@@ -1,23 +1,37 @@
 #![no_std]
 #![no_main]
+#![feature(custom_test_frameworks)]
+#![test_runner(mos_rust::test_runner)]
+#![reexport_test_harness_main = "test_main"]
 
-mod vga_buffer;
-
+use mos_rust::println;
 use core::panic::PanicInfo;
-
-
-#[panic_handler]
-fn panic_hanler(_info: &PanicInfo) -> ! {
-	println!("{}", _info);
-	loop {}
-}
-
-static _HELLO: &[u8] = b"Hello mOS-Rust!";
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-	println!("Hello World! \n");
-	println!("New line test");
-	
-	loop {}
+    println!("Hello World{}", "!");
+
+    #[cfg(test)]
+    test_main();
+
+    loop {}
+}
+
+/// This function is called on panic.
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
+    loop {}
+}
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    mos_rust::test_panic_handler(info)
+}
+
+#[test_case]
+fn trivial_assertion() {
+    assert_eq!(1, 1);
 }
