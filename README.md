@@ -34,6 +34,8 @@ cargo run
 
 # testing
 cargo test
+# IDT testing
+cargo test --lib
 
 # Use for USB
 dd if=target/x86_64-mos/debug/bootimage-rust_app_name.bin of=/dev/usb-name && sync
@@ -42,4 +44,5 @@ dd if=target/x86_64-mos/debug/bootimage-rust_app_name.bin of=/dev/usb-name && sy
 ## Logs
 - Initial Commit : <20.02.2025>
 - Testing Added & fixes : <01.03.2025>
-- Coming soon
+- Interrupts Added: <05.07.2026>
+- Coming Soon...
