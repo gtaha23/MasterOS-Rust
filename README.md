@@ -11,9 +11,9 @@ This project is currently being developed in 2 ways
 The dependencies are showed in Cargo.toml, you can add them with the command "cargo add crate-name@version"
 
 # Updates
-- Testing added
-- Integrated Tests added
-- Fixes for vga_buffer.rs and main.rs added
+- General fixes
+- New test added
+- GDT, IDT, TSS added
 
 ## Developers
 This project is being developed by me, but any contributer is welcome!
@@ -34,8 +34,8 @@ cargo run
 
 # testing
 cargo test
-# IDT testing
-cargo test --lib
+# Special testing
+cargo test --test <test_name>
 
 # Use for USB
 dd if=target/x86_64-mos/debug/bootimage-rust_app_name.bin of=/dev/usb-name && sync
@@ -45,4 +45,4 @@ dd if=target/x86_64-mos/debug/bootimage-rust_app_name.bin of=/dev/usb-name && sy
 - Initial Commit : <20.02.2025>
 - Testing Added & fixes : <01.03.2025>
 - Interrupts Added: <05.07.2026>
-- Coming Soon...
+- Double Fault, IDT, GDT.. Added: <06.07.2026>

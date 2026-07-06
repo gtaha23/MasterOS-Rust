@@ -10,6 +10,12 @@ use core::panic::PanicInfo;
 pub mod serial;
 pub mod vga_buffer;
 pub mod interrupts;
+pub mod gdt;
+
+pub fn init() {
+    gdt::init();
+    interrupts::init_idt();
+}
 
 pub trait Testable {
     fn run(&self) -> ();
@@ -66,9 +72,7 @@ pub extern "C" fn _start() -> ! {
     loop {}
 }
 
-pub fn init() {
-    interrupts::init_idt();
-}
+
 
 #[cfg(test)]
 #[panic_handler]

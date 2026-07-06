@@ -22,6 +22,15 @@ uart_16550 = "0.2.0"
 version = "1.0"
 features = ["spin_no_std"]
 
+[[bin]]
+name = "mos_rust"
+test = true
+bench = false
+
 [[test]]
 name = "should_panic"
+harness = false
+
+[[test]]
+name = "overflow"
 harness = false
