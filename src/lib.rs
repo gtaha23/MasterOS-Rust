@@ -7,11 +7,15 @@
 
 use core::panic::PanicInfo;
 
-
 pub mod serial;
 pub mod vga_buffer;
 pub mod interrupts;
 pub mod gdt;
+pub mod memory;
+pub mod allocator;
+pub mod task;
+
+extern crate alloc;
 
 pub fn init() {
     gdt::init();
@@ -74,14 +78,17 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
 
 /// Entry point for `cargo test`
 #[cfg(test)]
-#[unsafe(no_mangle)]
-pub extern "C" fn _start() -> ! {
-    init();      // new
+use bootloader::{BootInfo, entry_point};
+
+#[cfg(test)]
+entry_point!(test_kmain);
+
+#[cfg(test)]
+fn test_kmain(_bi: &'static BootInfo) -> ! {
+    init();
     test_main();
     hlt_loop();
 }
-
-
 
 #[cfg(test)]
 #[panic_handler]

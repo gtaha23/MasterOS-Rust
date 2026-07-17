@@ -11,7 +11,7 @@ extern "x86-interrupt" fn test_double_fault_handler(
     _stack_frame: InterruptStackFrame,
     _error_code: u64,
 ) -> ! {
-    serial_println!("[ok]");
+    serial_println!("[OK]");
     exit_qemu(QemuExitCode::Success);
     loop {}
 }
