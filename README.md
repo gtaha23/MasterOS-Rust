@@ -13,7 +13,9 @@ The dependencies are showed in Cargo.toml, you can add them with the command "ca
 # Updates
 - General fixes
 - New test added
-- GDT, IDT, TSS added
+- Multitasking added
+- Async/Await added
+- Memory patches added
 
 ## Developers
 This project is being developed by me, but any contributer is welcome!
@@ -46,3 +48,4 @@ dd if=target/x86_64-mos/debug/bootimage-rust_app_name.bin of=/dev/usb-name && sy
 - Testing Added & fixes : <01.03.2025>
 - Interrupts Added: <05.07.2026>
 - Double Fault, IDT, GDT.. Added: <06.07.2026>
+- Memory patches, Async/Await, Multitasking <17.07.2026>
