@@ -4,7 +4,7 @@ A lightweight OS written in Rust (bootloader is included as a crate)
 # History
 The lore behind this project is on MasterOS repo (C#)
 This project is currently being developed in 2 ways
-- masterOS-ubuntu (C repo), 
+- MasterOS-6 (C repo), 
 - MasterOS-Rust (Rust repo)
 
 # Dependencies
@@ -13,9 +13,9 @@ The dependencies are showed in Cargo.toml, you can add them with the command "ca
 # Updates
 - General fixes
 - New test added
-- Multitasking added
+- Timer added
 - Async/Await added
-- Memory patches added
+- Filesystem added
 
 ## Developers
 This project is being developed by me, but any contributer is welcome!
@@ -50,4 +50,5 @@ dd if=target/x86_64-mos/debug/bootimage-mos_rust.bin of=/dev/<usb-device> bs=4M 
 - Testing Added & fixes : <01.03.2025>
 - Interrupts Added: <05.07.2026>
 - Double Fault, IDT, GDT.. Added: <06.07.2026>
-- Memory patches, Async/Await, Multitasking <17.07.2026>
+- Memory patches, Async/Await, Multitasking: <17.07.2026>
+- Filesystem & Timer: <19.07.2026>
