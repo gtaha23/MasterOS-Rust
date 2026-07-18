@@ -4,7 +4,7 @@ use x86_64::{VirtAddr,structures::paging::{FrameAllocator, Mapper, Page, PageTab
 use fixedsizeblock::FixedSizeBlockAllocator;
 
 pub const HEAP_START: usize = 0x_4444_4444_0000;
-pub const HEAP_SIZE: usize = 100*1024;
+pub const HEAP_SIZE: usize = 512*1024;
 pub mod bump;
 pub mod linkedlist;
 pub mod fixedsizeblock;

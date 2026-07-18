@@ -14,6 +14,10 @@ pub mod gdt;
 pub mod memory;
 pub mod allocator;
 pub mod task;
+pub mod pit;
+pub mod ata;
+pub mod block_device;
+pub mod fs;
 
 extern crate alloc;
 
@@ -21,6 +25,7 @@ pub fn init() {
     gdt::init();
     interrupts::init_idt();
     unsafe { interrupts::PICS.lock().initialize() };
+    pit::init();
     x86_64::instructions::interrupts::enable();
 }
 
@@ -76,7 +81,7 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
     }
 }
 
-/// Entry point for `cargo test`
+// Entry point for `cargo test`
 #[cfg(test)]
 use bootloader::{BootInfo, entry_point};
 

@@ -45,17 +45,13 @@ fn kmain(bi: &'static BootInfo) -> ! {
         Rc::strong_count(&cloned_reference)
     );
 
+    #[cfg(test)]
+    test_main();
+
     let mut executor = Executor::new();
     executor.spawn(Task::new(example_task()));
     executor.spawn(Task::new(keyboard::print_keypresses()));
     executor.run();
-
-    #[cfg(test)]
-    test_main();
-
-    println!("It did not crash!");
-
-    mos_rust::hlt_loop();
 }
 
 async fn async_number() -> u32 {

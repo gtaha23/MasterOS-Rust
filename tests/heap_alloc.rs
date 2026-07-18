@@ -62,11 +62,11 @@ fn panic(info: &PanicInfo) -> ! {
 }
 
 #[test_case]
-fn many_boxes() {
-    let boxes = Box::new(1);
+fn many_boxes_long_lived() {
+    let long_lived = Box::new(1);
     for i in 0..HEAP_SIZE {
         let x = Box::new(i);
         assert_eq!(*x, i);
     }
-    assert_eq!(*boxes, 1);
+    assert_eq!(*long_lived, 1);
 }

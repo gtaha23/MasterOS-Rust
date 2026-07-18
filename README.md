@@ -26,11 +26,13 @@ Past projects were being developed by me and e0tra. But currently i am the only 
 To run mOS in qemu, you need to use these commands ( create an issue if some commands are missing ) last command is for writing the image to a USB
 
 ```
-cargo new mos_rust
-cd mos_rust
-rustup target add thumbv7em-none-eabihf
+# setup
+git clone https://github.com/gtaha23/MasterOS-Rust.git
+cd MasterOS-Rust
+rustup component add rust-src
 cargo install bootimage
 cargo bootimage
+cargo build --target x86_64-mos.json
 cargo build
 cargo run
 
@@ -40,7 +42,7 @@ cargo test
 cargo test --test <test_name>
 
 # Use for USB
-dd if=target/x86_64-mos/debug/bootimage-rust_app_name.bin of=/dev/usb-name && sync
+dd if=target/x86_64-mos/debug/bootimage-mos_rust.bin of=/dev/<usb-device> bs=4M && sync
 ```
 
 ## Logs
