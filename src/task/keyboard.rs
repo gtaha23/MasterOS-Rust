@@ -10,6 +10,7 @@ use futures_util::{
     task::AtomicWaker,
 };
 use pc_keyboard::{DecodedKey, HandleControl, Keyboard, ScancodeSet1, layouts};
+use crate::vga_buffer::backspace as vga_backspace;
 
 static SCANCODE_QUEUE: OnceCell<ArrayQueue<u8>> = OnceCell::uninit();
 static WAKER: AtomicWaker = AtomicWaker::new();
@@ -35,9 +36,7 @@ pub struct ScancodeStream {
 
 impl ScancodeStream {
     pub fn new() -> Self {
-        SCANCODE_QUEUE
-            .try_init_once(|| ArrayQueue::new(100))
-            .expect("ScancodeStream::new should only be called once");
+        let _ = SCANCODE_QUEUE.try_init_once(|| ArrayQueue::new(100));
         ScancodeStream { _private: () }
     }
 }
@@ -84,4 +83,45 @@ pub async fn print_keypresses() {
             }
         }
     }
+}
+
+pub async fn read_line() -> alloc::string::String {
+    use alloc::string::String;
+    
+    let mut scancodes = ScancodeStream::new();
+    let mut keyboard = Keyboard::new(
+        ScancodeSet1::new(),
+        layouts::Us104Key,
+        HandleControl::Ignore,
+    );
+    let mut line = String::new();
+
+    while let Some(scancode) = scancodes.next().await {
+        if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
+            if let Some(key) = keyboard.process_keyevent(key_event) {
+                match key {
+                    DecodedKey::Unicode(character) => {
+                        match character {
+                            '\n' | '\r' => {
+                                print!("\n");
+                                return line;
+                            }
+                            '\u{8}' => {
+                                if !line.is_empty() {
+                                    line.pop();
+                                    vga_backspace();
+                                }
+                            }
+                            _ => {
+                                line.push(character);
+                                print!("{}", character);
+                            }
+                        }
+                    }
+                    DecodedKey::RawKey(_) => {}
+                }
+            }
+        }
+    }
+    line
 }

@@ -7,15 +7,17 @@
 extern crate alloc;
 
 use alloc::{boxed::Box, rc::Rc, vec::Vec, vec};
-use mos_rust::{task::{Task, keyboard, executor::Executor}, memory::{self, BootInfoFrameAllocator}, println, allocator};
+use mos_rust::{task::{Task, keyboard, executor::Executor}, memory::{self, BootInfoFrameAllocator}, println, allocator, shell};
 use x86_64::{VirtAddr};
 use core::panic::PanicInfo;
 use bootloader::{BootInfo, entry_point};
 
+const OS_VER: &str = "0.0.7";
+
 entry_point!(kmain);
 
 fn kmain(bi: &'static BootInfo) -> ! {
-    println!("Hello World{}", "!");
+    println!("MasterOS -Rusty Pipe- {}", OS_VER);
     mos_rust::init();
 
     let phys_mem_offset = VirtAddr::new(bi.physical_memory_offset);
@@ -24,42 +26,13 @@ fn kmain(bi: &'static BootInfo) -> ! {
 
     allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
 
-    let heap_value = Box::new(41);
-    println!("heap_value at {:p}", heap_value);
-
-    let mut vec = Vec::new();
-    for i in 0..500 {
-        vec.push(i);
-    }
-    println!("vec at {:p}", vec.as_slice());
-
-    let reference_counted = Rc::new(vec![1, 2, 3]);
-    let cloned_reference = reference_counted.clone();
-    println!(
-        "current reference count is {}",
-        Rc::strong_count(&cloned_reference)
-    );
-    core::mem::drop(reference_counted);
-    println!(
-        "reference count is {} now",
-        Rc::strong_count(&cloned_reference)
-    );
-
     #[cfg(test)]
     test_main();
 
     let mut executor = Executor::new();
-    executor.spawn(Task::new(example_task()));
-    executor.spawn(Task::new(keyboard::print_keypresses()));
-    executor.run();
-}
 
-async fn async_number() -> u32 {
-    42
-}
-async fn example_task() {
-    let number = async_number().await;
-    println!("async number: {}", number);
+    executor.spawn(Task::new(shell::run()));
+    executor.run();
 }
 
 /// This function is called on panic.

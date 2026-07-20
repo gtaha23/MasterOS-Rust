@@ -14,8 +14,7 @@ The dependencies are showed in Cargo.toml, you can add them with the command "ca
 - General fixes
 - New test added
 - Timer added
-- Async/Await added
-- Filesystem added
+- Commands added
 
 ## Developers
 This project is being developed by me, but any contributer is welcome!
@@ -52,3 +51,5 @@ dd if=target/x86_64-mos/debug/bootimage-mos_rust.bin of=/dev/<usb-device> bs=4M 
 - Double Fault, IDT, GDT.. Added: <06.07.2026>
 - Memory patches, Async/Await, Multitasking: <17.07.2026>
 - Filesystem & Timer: <19.07.2026>
+- Commands & Shell development start: <20.07.2026>
+- Commands initial update: <21.07.2026>

@@ -97,6 +97,22 @@ impl Writer {
 		}
 	}
 
+	pub fn backspace(&mut self) {
+        if self.column_pos > 0 {
+            self.column_pos -= 1;
+            
+            let row = BUFFER_HEIGHT - 1;
+            let col = self.column_pos;
+
+            let blank = ScreenChar {
+                ascii_char: b' ',
+                color_code: self.color_code,
+            };
+            self.buffer.chars[row][col].write(blank);
+            
+        }
+    }
+
 	fn new_line(&mut self) {
 		for row in 1..BUFFER_HEIGHT {
 			for col in 0..BUFFER_WIDTH {
@@ -106,6 +122,13 @@ impl Writer {
 		}
 		self.clear_row(BUFFER_HEIGHT - 1);
 		self.column_pos = 0;
+	}
+
+	pub fn clear(&mut self) {
+		self.column_pos = 0;
+		for row in 0..BUFFER_HEIGHT {
+			self.clear_row(row);
+		}
 	}
 
 	fn clear_row(&mut self, row: usize) {
@@ -126,6 +149,14 @@ impl fmt::Write for Writer {
     }
 }
 
+pub fn clear() {
+	use x86_64::instructions::interrupts;
+
+	interrupts::without_interrupts(|| {
+		WRITER.lock().clear();
+	});
+}
+
 pub fn _print_shit() {
 	use core::fmt::Write;
 	let mut writer = Writer {
@@ -137,6 +168,15 @@ pub fn _print_shit() {
 	writer.write_byte(b'H');
 	writer.write_string("ello ");
 	write!(writer, "The numbers are {} and {}", 42, 1.0/3.0).unwrap();
+}
+
+pub fn backspace() {
+    use x86_64::instructions::interrupts;
+
+    // Kesmelerin çakışmasını önlemek için kilitleyerek çalıştırıyoruz
+    interrupts::without_interrupts(|| {
+        WRITER.lock().backspace();
+    });
 }
 
 #[macro_export]

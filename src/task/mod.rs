@@ -4,6 +4,7 @@ use core::{future::Future, pin::Pin, sync::atomic::{AtomicU64, Ordering}, task::
 pub mod executor;
 pub mod keyboard;
 pub mod simple_executor;
+pub mod time;
 
 pub struct Task {
     id: TaskId,

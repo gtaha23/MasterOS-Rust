@@ -6,6 +6,7 @@
 #![feature(abi_x86_interrupt)]
 
 use core::panic::PanicInfo;
+use x86_64::instructions::port::Port;
 
 pub mod serial;
 pub mod vga_buffer;
@@ -18,6 +19,7 @@ pub mod pit;
 pub mod ata;
 pub mod block_device;
 pub mod fs;
+pub mod shell;
 
 extern crate alloc;
 
@@ -66,6 +68,13 @@ pub enum QemuExitCode {
     Failed = 0x11,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum QemuRebootCode {
+    Success = 0x06,
+    Failed = 0x21
+}
+
 pub fn hlt_loop() -> ! {
     loop {
         x86_64::instructions::hlt();
@@ -73,11 +82,19 @@ pub fn hlt_loop() -> ! {
 }
 
 pub fn exit_qemu(exit_code: QemuExitCode) {
-    use x86_64::instructions::port::Port;
-
+    
     unsafe {
         let mut port = Port::new(0xf4);
         port.write(exit_code as u32);
+    }
+}
+
+pub fn reboot_qemu(reboot_code_req: u8, reboot_code: QemuRebootCode) {
+    let reboot_code_req = 0x02;
+    unsafe {
+        let mut port2 = Port::new(0xcf9);
+        port2.write(reboot_code_req);
+        port2.write(reboot_code as u8);
     }
 }
 
