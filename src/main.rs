@@ -12,7 +12,7 @@ use x86_64::{VirtAddr};
 use core::panic::PanicInfo;
 use bootloader::{BootInfo, entry_point};
 
-const OS_VER: &str = "0.0.7";
+const OS_VER: &str = "0.0.9";
 
 entry_point!(kmain);
 

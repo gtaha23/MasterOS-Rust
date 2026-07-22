@@ -12,8 +12,6 @@ The dependencies are showed in Cargo.toml, you can add them with the command "ca
 
 # Updates
 - General fixes
-- New test added
-- Timer added
 - Commands added
 
 ## Developers
@@ -53,3 +51,4 @@ dd if=target/x86_64-mos/debug/bootimage-mos_rust.bin of=/dev/<usb-device> bs=4M 
 - Filesystem & Timer: <19.07.2026>
 - Commands & Shell development start: <20.07.2026>
 - Commands initial update: <21.07.2026>
+- Command adding: <22.07.2026 - XX.XX.XXXX>

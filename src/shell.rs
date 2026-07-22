@@ -11,8 +11,8 @@ use crate::{println, print, vga_buffer::clear, exit_qemu, QemuExitCode, reboot_q
 use crate::task::{keyboard, executor::Executor};
 use bootloader::entry_point;
 
-const OS_VER: &str = "0.0.8";
-const SHELL_VER: &str = "0.0.2";
+const OS_VER: &str = "0.0.9";
+const SHELL_VER: &str = "0.0.3";
 
 pub async fn run() {
     loop {
@@ -31,7 +31,7 @@ pub async fn run() {
 
         match command {
             "help" => {
-                println!("Commands: help, ver, clear, shutdown, reboot, shellver, sleep");
+                println!("Commands: help, ver, clear, shutdown, reboot, shellver, sleep, mfetch");
             }
             "ver" => {
                 println!("MasterOS -Rusty Pipe- {}", OS_VER);
@@ -70,6 +70,19 @@ pub async fn run() {
                 } else {
                     println!("Usage: sleep <seconds>");
                 }
+            }
+            "mfetch" => {
+            	println!(" ");
+            	println!("                     ########  ######## ");
+            	println!(" ######## #####    ###    ### ###    ## ");
+            	println!("  ######### ####  ##      ### ######    ");
+            	println!("  ###  ###  #### ###     ###    ######  ");
+            	println!(" ###  ###  #### ##     ### ##    ####   ");
+            	println!(" ################ ########  ########    ");
+            	println!(" ");
+            	println!("  OS:      MasterOS {}", OS_VER);
+            	println!("  Kernel:  Custom x86 (32-bit)");
+            	println!("  Shell:   mShell {}", SHELL_VER);
             }
             _ => {
                 println!("!Command not found! : '{}'", command);
