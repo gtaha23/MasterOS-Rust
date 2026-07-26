@@ -8,11 +8,11 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 use crate::{println, print, vga_buffer::clear, exit_qemu, QemuExitCode, reboot_qemu, QemuRebootCode};
-use crate::task::{keyboard, executor::Executor};
+use crate::task::{keyboard, executor::Executor, time::sleep};
 use bootloader::entry_point;
 
 const OS_VER: &str = "0.0.9";
-const SHELL_VER: &str = "0.0.3";
+const SHELL_VER: &str = "0.0.4";
 
 pub async fn run() {
     loop {
@@ -50,9 +50,9 @@ pub async fn run() {
             }
             "yustupid" => {
                 println!("Na im not");
-                crate::task::time::sleep(5 * 1000).await;
+                sleep(5 * 1000).await;
                 println!("Whats nine plus ten?");
-                crate::task::time::sleep(5 * 1000).await;
+                sleep(5 * 1000).await;
                 println!("Twanni one");
             }
 
@@ -61,7 +61,7 @@ pub async fn run() {
                     if let Ok(seconds) = arg.parse::<u64>() {
                         println!("Sleeping for {} seconds...", seconds);
                 
-                        crate::task::time::sleep(seconds * 1000).await;
+                        sleep(seconds * 1000).await;
                 
                         println!("Woke up!");
                     } else {
