@@ -6,8 +6,7 @@
 
 extern crate alloc;
 
-use alloc::{boxed::Box, rc::Rc, vec::Vec, vec};
-use mos_rust::{task::{Task, keyboard, executor::Executor}, memory::{self, BootInfoFrameAllocator}, println, allocator, shell};
+use mos_rust::{task::{Task, executor::Executor}, memory::{self, BootInfoFrameAllocator}, println, allocator, shell};
 use x86_64::{VirtAddr};
 use core::panic::PanicInfo;
 use bootloader::{BootInfo, entry_point};

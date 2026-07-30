@@ -89,7 +89,7 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
     }
 }
 
-pub fn reboot_qemu(reboot_code_req: u8, reboot_code: QemuRebootCode) {
+pub fn reboot_qemu(_reboot_code_req: u8, reboot_code: QemuRebootCode) {
     let reboot_code_req = 0x02;
     unsafe {
         let mut port2 = Port::new(0xcf9);

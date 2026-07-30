@@ -1,22 +1,17 @@
-#![no_std]
-#![no_main]
-#![feature(custom_test_frameworks)]
-#![test_runner(mos_rust::test_runner)]
-#![reexport_test_harness_main = "test_main"]
-
 extern crate alloc;
 
-use alloc::vec::Vec;
+use alloc::{vec::Vec, string::String, boxed::Box};
 use crate::{println, print, vga_buffer::clear, exit_qemu, QemuExitCode, reboot_qemu, QemuRebootCode};
-use crate::task::{keyboard, executor::Executor, time::sleep};
-use bootloader::entry_point;
+use crate::task::{keyboard, time::sleep};
+
 
 const OS_VER: &str = "0.0.9";
-const SHELL_VER: &str = "0.0.4";
+const SHELL_VER: &str = "0.0.5";
 
 pub async fn run() {
+    let mut prompt: &str ="mOS";
     loop {
-        print!("mOS> "); 
+        print!("{}> ", prompt); 
 
         let input = keyboard::read_line().await;
         let trimmed = input.trim();
@@ -31,7 +26,7 @@ pub async fn run() {
 
         match command {
             "help" => {
-                println!("Commands: help, ver, clear, shutdown, reboot, shellver, sleep, mfetch");
+                println!("Commands: help, ver, clear, shutdown, reboot, shellver, sleep, mfetch, prompt");
             }
             "ver" => {
                 println!("MasterOS -Rusty Pipe- {}", OS_VER);
@@ -57,7 +52,7 @@ pub async fn run() {
             }
 
             "sleep" => {
-                if let Some(arg) = _args.get(0) {
+                if let Some(arg) = _args.first() {
                     if let Ok(seconds) = arg.parse::<u64>() {
                         println!("Sleeping for {} seconds...", seconds);
                 
@@ -83,6 +78,14 @@ pub async fn run() {
             	println!("  OS:      MasterOS {}", OS_VER);
             	println!("  Kernel:  Custom x86 (32-bit)");
             	println!("  Shell:   mShell {}", SHELL_VER);
+            }
+            "prompt" => {
+                print!("Type the prompt you want to be seen -> ");
+                let input = keyboard::read_line().await;
+                if let Some(selected) = input.split_whitespace().next() {
+                    let leaked: &'static str = Box::leak(String::from(selected).into_boxed_str());
+                    prompt = leaked;
+                }
             }
             _ => {
                 println!("!Command not found! : '{}'", command);

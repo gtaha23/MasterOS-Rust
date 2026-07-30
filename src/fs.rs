@@ -267,7 +267,7 @@ impl<D: BlockDevice> FileSystem<D> {
 
             for (byte_idx, &byte) in buf.iter().enumerate() {
                 if byte == 0xFF {
-                    continue; // all 8 blocks in this byte are taken
+                    continue;
                 }
                 for bit in 0..8u32 {
                     let rel = block_bit_base + byte_idx as u32 * 8 + bit;

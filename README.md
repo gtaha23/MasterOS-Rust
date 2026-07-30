@@ -11,7 +11,7 @@ This project is currently being developed in 2 ways
 The dependencies are showed in Cargo.toml, you can add them with the command "cargo add crate-name@version"
 
 # Updates
-- General fixes
+- General fixes/optimization
 - Commands added
 
 ## Developers
