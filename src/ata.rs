@@ -11,6 +11,7 @@
 
 use x86_64::instructions::port::{Port, PortWriteOnly};
 use crate::block_device::{BlockDevice, BLOCK_SIZE};
+use crate::serial_println;
 
 const DATA: u16 = 0x1F0;
 const ERROR: u16 = 0x1F1;
@@ -89,6 +90,7 @@ impl AtaDisk {
     }
 
     pub fn identify(&mut self) -> Result<[u16; 256], AtaError> {
+        serial_println!("[ata] identify: writing selector/command bytes");
         unsafe {
             self.drive_head.write(0xA0);
             self.sector_count.write(0);
@@ -97,18 +99,26 @@ impl AtaDisk {
             self.lba_hi.write(0);
             self.command.write(CMD_IDENTIFY);
         }
+        serial_println!("[ata] identify: command written, reading status");
 
-        if unsafe { self.status.read() } == 0 {
+        let status = unsafe { self.status.read() };
+        serial_println!("[ata] identify: status = {:#x}", status);
+        if status == 0 {
+            serial_println!("[ata] identify: no drive detected");
             return Err(AtaError::NoDrive);
         }
 
+        serial_println!("[ata] identify: waiting while busy");
         self.wait_while_busy()?;
+        serial_println!("[ata] identify: busy-wait done, waiting for DRQ");
         self.wait_for_drq()?;
+        serial_println!("[ata] identify: DRQ ready, reading 256 words");
 
         let mut buf = [0u16; 256];
         for word in buf.iter_mut() {
             *word = unsafe { self.data.read() };
         }
+        serial_println!("[ata] identify: read complete");
         Ok(buf)
     }
 

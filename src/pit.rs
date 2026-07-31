@@ -33,7 +33,7 @@ pub fn init() {
     }
 }
 
-pub(crate) fn tick() {
+pub(crate) fn _tick() {
     TICKS.fetch_add(1, Ordering::Relaxed);
 }
 

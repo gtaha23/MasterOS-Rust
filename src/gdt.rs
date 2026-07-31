@@ -3,7 +3,7 @@ use x86_64::structures::tss::TaskStateSegment;
 use lazy_static::lazy_static;
 use x86_64::structures::gdt::{GlobalDescriptorTable, Descriptor, SegmentSelector};
 
-pub const DOUBLE_FAULT_IST_INDEX: u16 = 0;
+pub const DOUBLE_FAULT_IST_INDEX: u16 = 1;
 
 lazy_static! {
     static ref TSS: TaskStateSegment = {
@@ -12,9 +12,11 @@ lazy_static! {
             const STACK_SIZE: usize = 4096 * 5;
             static mut STACK: [u8; STACK_SIZE] = [0; STACK_SIZE];
 
-            let stack_start = VirtAddr::from_ptr(&raw const STACK);
+            let stack_start = VirtAddr::from_ptr(&raw const STACK as *const _ as *const u8);
             let stack_end = stack_start + STACK_SIZE;
-            stack_end
+            // Align stack end to 16 bytes for ABI compatibility
+            let aligned_end = VirtAddr::new(stack_end.as_u64() & !0xF);
+            aligned_end
         };
         tss
     };

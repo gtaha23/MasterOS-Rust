@@ -26,7 +26,19 @@ extern crate alloc;
 pub fn init() {
     gdt::init();
     interrupts::init_idt();
-    unsafe { interrupts::PICS.lock().initialize() };
+    unsafe {
+        let mut pics = interrupts::PICS.lock();
+        pics.initialize();
+        // Our ATA driver (src/ata.rs) is polling-mode only and never expects
+        // or handles IRQ14/IRQ15 (the primary/secondary ATA channel
+        // interrupts). Without this, issuing an ATA command (e.g. IDENTIFY)
+        // causes the drive to raise an interrupt that has no IDT handler,
+        // which escalates into a double fault. Masking these two lines on
+        // the secondary PIC stops them from ever reaching the CPU.
+        // Bit layout for the secondary PIC's mask register: IRQ8..IRQ15 map
+        // to bits 0..7, so IRQ14 = bit 6, IRQ15 = bit 7 -> 0b1100_0000.
+        pics.write_masks(0x00, 0b1100_0000);
+    }
     pit::init();
     x86_64::instructions::interrupts::enable();
 }

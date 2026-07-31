@@ -20,6 +20,10 @@ impl Future for SleepFuture {
         if uptime_ms() >= self.end_time_ms {
             Poll::Ready(())
         } else {
+            // Wait for the next timer interrupt before re-checking, instead of
+            // immediately re-queuing and busy-spinning at full CPU speed.
+            // Any interrupt (timer or otherwise) will resume execution here.
+            x86_64::instructions::hlt();
             cx.waker().wake_by_ref();
             Poll::Pending
         }

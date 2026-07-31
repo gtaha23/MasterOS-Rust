@@ -1,3 +1,9 @@
+/* 
+    During the File System development the IRQ14/15 interrupts caused the polling-based ATA driver to make a double fault. So
+    to fix this i had to add masking to them. The real patch will be a more useful interrupt system being added, so stay tuned!
+*/
+
+
 use crate::{gdt, hlt_loop, println};
 use lazy_static::lazy_static;
 use pic8259::ChainedPics;
@@ -20,6 +26,10 @@ lazy_static! {
         idt[InterruptIndex::Keyboard.as_usize()].set_handler_fn(keyboard_interrupt_handler);
 
         idt.page_fault.set_handler_fn(page_fault_handler);
+        idt.invalid_opcode.set_handler_fn(invalid_opcode_handler);
+        idt.general_protection_fault.set_handler_fn(general_protection_fault_handler);
+        idt.divide_error.set_handler_fn(divide_error_handler);
+        idt.stack_segment_fault.set_handler_fn(stack_segment_fault_handler);
 
         idt
     };
@@ -49,7 +59,7 @@ impl InterruptIndex {
 }
 
 extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: InterruptStackFrame) {
-    crate::pit::tick();
+    crate::pit::_tick();
 
     unsafe {
         PICS.lock()
@@ -84,6 +94,30 @@ extern "x86-interrupt" fn page_fault_handler(stack_frame: InterruptStackFrame, e
     println!("Error Code: {:?}", error_code);
     println!("{:?}", stack_frame);
 
+    hlt_loop();
+}
+
+extern "x86-interrupt" fn invalid_opcode_handler(stack_frame: InterruptStackFrame) {
+    println!("EXCEPTION: INVALID OPCODE\n{:#?}", stack_frame);
+    hlt_loop();
+}
+
+extern "x86-interrupt" fn general_protection_fault_handler(stack_frame: InterruptStackFrame, error_code: u64) {
+    println!("EXCEPTION: GENERAL PROTECTION FAULT");
+    println!("Error Code: {:#x}", error_code);
+    println!("{:#?}", stack_frame);
+    hlt_loop();
+}
+
+extern "x86-interrupt" fn divide_error_handler(stack_frame: InterruptStackFrame) {
+    println!("EXCEPTION: DIVIDE ERROR\n{:#?}", stack_frame);
+    hlt_loop();
+}
+
+extern "x86-interrupt" fn stack_segment_fault_handler(stack_frame: InterruptStackFrame, error_code: u64) {
+    println!("EXCEPTION: STACK SEGMENT FAULT");
+    println!("Error Code: {:#x}", error_code);
+    println!("{:#?}", stack_frame);
     hlt_loop();
 }
 

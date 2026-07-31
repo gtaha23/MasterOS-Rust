@@ -45,7 +45,7 @@ fn list_files_reports_created_files() {
     fs.create_file("a.txt").unwrap();
     fs.create_file("b.txt").unwrap();
 
-    let mut names = fs.list_files().unwrap();
+    let mut names = fs.list_files("").unwrap();
     names.sort();
     assert_eq!(names, vec![String::from("a.txt"), String::from("b.txt")]);
 }

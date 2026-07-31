@@ -9,10 +9,13 @@ test-args = [
     "-display", "none"
 ]
 run-args = [
-    "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04"
+    "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-serial", "stdio"
 ]
 test-success-exit-code = 33
 test-timeout = 300
+
+[package.metadata.bootloader]
+kernel-stack-size = 4096
 
 [dependencies]
 bootloader = { version = "0.9", features = ["map_physical_memory"]}

@@ -13,6 +13,7 @@ The dependencies are showed in Cargo.toml, you can add them with the command "ca
 # Updates
 - General fixes/optimization
 - Commands added
+- File System actually useful now with commands
 
 ## Developers
 This project is being developed by me, but any contributer is welcome!
@@ -52,3 +53,4 @@ dd if=target/x86_64-mos/debug/bootimage-mos_rust.bin of=/dev/<usb-device> bs=4M 
 - Commands & Shell development start: <20.07.2026>
 - Commands initial update: <21.07.2026>
 - Command adding: <22.07.2026 - XX.XX.XXXX>
+- Filesystem for shell adaption <31.07.2026>

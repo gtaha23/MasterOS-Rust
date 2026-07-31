@@ -6,31 +6,40 @@
 
 extern crate alloc;
 
-use mos_rust::{task::{Task, executor::Executor}, memory::{self, BootInfoFrameAllocator}, println, allocator, shell};
+use mos_rust::{task::{Task, executor::Executor}, memory::{self, BootInfoFrameAllocator}, println, serial_println, allocator, shell};
 use x86_64::{VirtAddr};
 use core::panic::PanicInfo;
 use bootloader::{BootInfo, entry_point};
 
-const OS_VER: &str = "0.0.9";
+const OS_VER: &str = "0.1.0";
 
 entry_point!(kmain);
 
 fn kmain(bi: &'static BootInfo) -> ! {
     println!("MasterOS -Rusty Pipe- {}", OS_VER);
+    serial_println!("[checkpoint] before mos_rust::init()");
     mos_rust::init();
+    serial_println!("[checkpoint] after mos_rust::init()");
 
     let phys_mem_offset = VirtAddr::new(bi.physical_memory_offset);
     let mut mapper = unsafe { memory::init(phys_mem_offset) };
+    serial_println!("[checkpoint] after memory::init()");
     let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&bi.memory_map) };
+    serial_println!("[checkpoint] after BootInfoFrameAllocator::init()");
 
     allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
+    serial_println!("[checkpoint] after allocator::init_heap()");
 
     #[cfg(test)]
     test_main();
 
     let mut executor = Executor::new();
+    serial_println!("[checkpoint] after Executor::new()");
 
-    executor.spawn(Task::new(shell::run()));
+    let task = Task::new(shell::run());
+    serial_println!("[checkpoint] after Task::new(shell::run()) constructed");
+    executor.spawn(task);
+    serial_println!("[checkpoint] after executor.spawn()");
     executor.run();
 }
 

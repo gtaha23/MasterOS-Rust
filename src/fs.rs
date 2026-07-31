@@ -35,10 +35,13 @@ use alloc::{string::String, vec, vec::Vec};
 
 pub const MAGIC: u32 = 0x53465331; // "SFS1"
 pub const MAX_FILES: usize = 128;
-pub const MAX_NAME_LEN: usize = 28;
-pub const DIRECT_POINTERS: usize = 6;
+pub const MAX_NAME_LEN: usize = 24;
+pub const DIRECT_POINTERS: usize = 5;
 const INODE_SIZE: usize = 64;
 const POINTERS_PER_BLOCK: usize = BLOCK_SIZE / 4;
+
+pub const KIND_FILE: u8 = 0;
+pub const KIND_DIR: u8 = 1;
 
 #[derive(Debug)]
 pub enum FsError<E> {
@@ -50,6 +53,9 @@ pub enum FsError<E> {
     NotFormatted,
     NameTooLong,
     FileTooLarge,
+    NotADirectory,
+    IsDirectory,
+    DirectoryNotEmpty,
 }
 
 fn ceil_div(a: u32, b: u32) -> u32 {
@@ -100,6 +106,7 @@ impl Superblock {
 #[derive(Clone)]
 struct Inode {
     used: bool,
+    kind: u8,
     name: [u8; MAX_NAME_LEN],
     name_len: u8,
     size: u32,
@@ -111,12 +118,19 @@ impl Inode {
     fn empty() -> Self {
         Inode {
             used: false,
+            kind: KIND_FILE,
             name: [0; MAX_NAME_LEN],
             name_len: 0,
             size: 0,
             direct: [0; DIRECT_POINTERS],
             indirect: 0,
         }
+    }
+
+    fn empty_dir() -> Self {
+        let mut inode = Self::empty();
+        inode.kind = KIND_DIR;
+        inode
     }
 
     fn name_str(&self) -> &str {
@@ -126,7 +140,8 @@ impl Inode {
     fn to_bytes(&self) -> [u8; INODE_SIZE] {
         let mut buf = [0u8; INODE_SIZE];
         buf[0] = self.used as u8;
-        buf[1] = self.name_len;
+        buf[1] = self.kind;
+        buf[2] = self.name_len;
         buf[4..8].copy_from_slice(&self.size.to_le_bytes());
         for (i, ptr) in self.direct.iter().enumerate() {
             buf[8 + i * 4..12 + i * 4].copy_from_slice(&ptr.to_le_bytes());
@@ -146,8 +161,9 @@ impl Inode {
         name.copy_from_slice(&buf[36..36 + MAX_NAME_LEN]);
         Inode {
             used: buf[0] != 0,
+            kind: buf[1],
             name,
-            name_len: buf[1],
+            name_len: buf[2],
             size: u32_at(4),
             direct,
             indirect: u32_at(32),
@@ -158,9 +174,99 @@ impl Inode {
 pub struct FileSystem<D: BlockDevice> {
     dev: D,
     sb: Superblock,
+    cwd: String,
 }
 
 impl<D: BlockDevice> FileSystem<D> {
+    fn normalize_path(&self, path: &str) -> Result<String, FsError<D::Error>> {
+        let mut components = Vec::new();
+        if path.starts_with('/') {
+            // absolute path
+        } else {
+            if !self.cwd.is_empty() {
+                for comp in self.cwd.split('/') {
+                    if !comp.is_empty() {
+                        components.push(comp);
+                    }
+                }
+            }
+        }
+        for comp in path.split('/') {
+            if comp.is_empty() || comp == "." {
+                continue;
+            }
+            if comp == ".." {
+                components.pop();
+                continue;
+            }
+            if comp.len() > MAX_NAME_LEN {
+                return Err(FsError::NameTooLong);
+            }
+            components.push(comp);
+        }
+        Ok(components.join("/"))
+    }
+
+    fn parent_path(path: &str) -> &str {
+        if let Some(pos) = path.rfind('/') {
+            &path[..pos]
+        } else {
+            ""
+        }
+    }
+
+    fn child_entries(&mut self, path: &str) -> Result<Vec<String>, FsError<D::Error>> {
+        let normalized = self.normalize_path(path)?;
+        let prefix = if normalized.is_empty() { String::new() } else { normalized.clone() + "/" };
+        let mut children = Vec::new();
+        for idx in 0..self.sb.max_files {
+            let inode = self.read_inode(idx)?;
+            if !inode.used || inode.name_str().is_empty() {
+                continue;
+            }
+            let name = inode.name_str();
+            if name == normalized {
+                continue;
+            }
+            if name.starts_with(&prefix) {
+                let rest = &name[prefix.len()..];
+                if let Some(next_slash) = rest.find('/') {
+                    children.push(String::from(&rest[..next_slash]));
+                } else {
+                    children.push(String::from(rest));
+                }
+            }
+        }
+        children.sort();
+        children.dedup();
+        Ok(children)
+    }
+
+    fn is_directory(&mut self, path: &str) -> Result<bool, FsError<D::Error>> {
+        let normalized = self.normalize_path(path)?;
+        if normalized.is_empty() {
+            return Ok(true);
+        }
+        match self.find_inode_by_name(&normalized)? {
+            Some((_idx, inode)) => Ok(inode.kind == KIND_DIR),
+            None => Ok(false),
+        }
+    }
+
+    fn set_cwd(&mut self, path: &str) -> Result<(), FsError<D::Error>> {
+        let normalized = self.normalize_path(path)?;
+        if normalized.is_empty() || self.is_directory(&normalized)? {
+            self.cwd = normalized;
+            Ok(())
+        } else {
+            Err(FsError::NotADirectory)
+        }
+    }
+
+    pub fn cwd(&self) -> &str {
+        if self.cwd.is_empty() { "/" } else { &self.cwd }
+    }
+
     pub fn format(mut dev: D) -> Result<Self, FsError<D::Error>> {
         let total_blocks = dev.total_blocks();
 
@@ -197,7 +303,12 @@ impl<D: BlockDevice> FileSystem<D> {
             dev.write_block(b, &zero).map_err(FsError::Io)?;
         }
 
-        Ok(FileSystem { dev, sb })
+        let root_inode = Inode::empty_dir();
+        let mut inode_block = [0u8; BLOCK_SIZE];
+        inode_block[..INODE_SIZE].copy_from_slice(&root_inode.to_bytes());
+        dev.write_block(inode_table_start, &inode_block).map_err(FsError::Io)?;
+
+        Ok(FileSystem { dev, sb, cwd: String::new() })
     }
 
     pub fn mount(mut dev: D) -> Result<Self, FsError<D::Error>> {
@@ -207,7 +318,7 @@ impl<D: BlockDevice> FileSystem<D> {
         if sb.magic != MAGIC {
             return Err(FsError::NotFormatted);
         }
-        Ok(FileSystem { dev, sb })
+        Ok(FileSystem { dev, sb, cwd: String::new() })
     }
 
     pub fn into_device(self) -> D {
@@ -321,35 +432,70 @@ impl<D: BlockDevice> FileSystem<D> {
         Ok(())
     }
 
-    pub fn list_files(&mut self) -> Result<Vec<String>, FsError<D::Error>> {
-        let mut names = Vec::new();
-        for idx in 0..self.sb.max_files {
-            let inode = self.read_inode(idx)?;
-            if inode.used {
-                names.push(String::from(inode.name_str()));
-            }
+    pub fn list_files(&mut self, path: &str) -> Result<Vec<String>, FsError<D::Error>> {
+        let normalized = self.normalize_path(path)?;
+        self.child_entries(&normalized)
+    }
+
+    pub fn create_dir(&mut self, path: &str) -> Result<(), FsError<D::Error>> {
+        let normalized = self.normalize_path(path)?;
+        if normalized.is_empty() {
+            return Err(FsError::AlreadyExists);
         }
-        Ok(names)
+        if normalized.len() > MAX_NAME_LEN {
+            return Err(FsError::NameTooLong);
+        }
+        if self.find_inode_by_name(&normalized)?.is_some() {
+            return Err(FsError::AlreadyExists);
+        }
+        let parent = Self::parent_path(&normalized);
+        if !parent.is_empty() && !self.is_directory(parent)? {
+            return Err(FsError::NotADirectory);
+        }
+        let idx = self.find_free_inode()?;
+        let mut inode = Inode::empty_dir();
+        inode.used = true;
+        inode.name_len = normalized.len() as u8;
+        inode.name[..normalized.len()].copy_from_slice(normalized.as_bytes());
+        self.write_inode(idx, &inode)?;
+        Ok(())
+    }
+
+    pub fn change_dir(&mut self, path: &str) -> Result<(), FsError<D::Error>> {
+        self.set_cwd(path)
     }
 
     pub fn create_file(&mut self, name: &str) -> Result<(), FsError<D::Error>> {
-        if name.len() > MAX_NAME_LEN {
+        let normalized = self.normalize_path(name)?;
+        if normalized.is_empty() {
+            return Err(FsError::AlreadyExists);
+        }
+        if normalized.len() > MAX_NAME_LEN {
             return Err(FsError::NameTooLong);
         }
-        if self.find_inode_by_name(name)?.is_some() {
+        if self.find_inode_by_name(&normalized)?.is_some() {
             return Err(FsError::AlreadyExists);
+        }
+        let parent = Self::parent_path(&normalized);
+        if !parent.is_empty() && !self.is_directory(parent)? {
+            return Err(FsError::NotADirectory);
         }
         let idx = self.find_free_inode()?;
         let mut inode = Inode::empty();
         inode.used = true;
-        inode.name_len = name.len() as u8;
-        inode.name[..name.len()].copy_from_slice(name.as_bytes());
+        inode.name_len = normalized.len() as u8;
+        inode.name[..normalized.len()].copy_from_slice(normalized.as_bytes());
         self.write_inode(idx, &inode)?;
         Ok(())
     }
 
     pub fn write_file(&mut self, name: &str, data: &[u8]) -> Result<(), FsError<D::Error>> {
-        let (idx, mut inode) = self.find_inode_by_name(name)?.ok_or(FsError::NotFound)?;
+        let normalized = self.normalize_path(name)?;
+        let (idx, mut inode) = self.find_inode_by_name(&normalized)?.ok_or(FsError::NotFound)?;
+
+        if inode.kind == KIND_DIR {
+            return Err(FsError::IsDirectory);
+        }
 
         self.free_inode_blocks(&inode)?;
         inode.direct = [0; DIRECT_POINTERS];
@@ -394,7 +540,11 @@ impl<D: BlockDevice> FileSystem<D> {
     }
 
     pub fn read_file(&mut self, name: &str) -> Result<Vec<u8>, FsError<D::Error>> {
-        let (_, inode) = self.find_inode_by_name(name)?.ok_or(FsError::NotFound)?;
+        let normalized = self.normalize_path(name)?;
+        let (_, inode) = self.find_inode_by_name(&normalized)?.ok_or(FsError::NotFound)?;
+        if inode.kind == KIND_DIR {
+            return Err(FsError::IsDirectory);
+        }
         let mut out = Vec::with_capacity(inode.size as usize);
 
         let blocks_needed = ceil_div(inode.size, BLOCK_SIZE as u32);
