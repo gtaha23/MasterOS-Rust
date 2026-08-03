@@ -19,7 +19,7 @@
 ## ✨ Features
 
 - ⚡ Rust-based kernel
-- 🥾 Custom bootloader crate
+- 🥾 **rustosdev** bootloader crate
 - 🧠 Memory management
 - 🔀 Async/Await support
 - 🧵 Multitasking
